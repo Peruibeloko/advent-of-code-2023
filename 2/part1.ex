@@ -1,4 +1,4 @@
-{_status, contents} = File.read("test2.txt")
+{_status, contents} = File.read("input.txt")
 
 game_set_to_list = fn set ->
   [count_str, color] = String.split(set, " ")
@@ -6,15 +6,15 @@ game_set_to_list = fn set ->
 end
 
 upsert_color_map = fn [count, color], acc ->
-  Map.update(acc, color, count, &(&1 + count))
+  Map.update(acc, color, count, &(max(&1, count)))
 end
 
-#todo
 is_compatible = fn subject, reference ->
   subject_map = elem(subject, 1)
 
   Map.keys(subject_map)
-  |> Enum.reduce(true, fn color, acc -> acc and subject_map[color] <= reference[color] end)
+  |> Enum.map(&(Map.get(subject_map, &1) <= Map.get(reference, &1)))
+  |> Enum.reduce(true, &(&1 and &2))
 end
 
 parse_line = fn line ->
@@ -38,9 +38,9 @@ reference = %{
 
 contents
 |> String.replace("Game ", "")
-|> String.split("\r\n")
+|> String.split("\n")
 |> Enum.map(parse_line)
 |> Enum.filter(&(is_compatible.(&1, reference)))
 |> Enum.map(&(elem(&1, 0)))
-|> Enum.join("\n")
+|> Enum.sum
 |> IO.puts()
