@@ -1,6 +1,10 @@
 symbols_regex = ~r/\*/
 number_regex = ~r/[1-9][0-9]{0,2}/
 
+is_valid_offset = fn {x, y} ->
+  x >= 0 and y >= 0 and x < 140 and y < 140
+end
+
 string_pos_to_xy = fn {idx, length} ->
   x = rem(idx, 140)
   y = div(idx, 140)
@@ -11,82 +15,118 @@ xy_to_string_pos = fn {x, y} ->
   x + y * 140
 end
 
-get_surrounding_contents = fn {x, y, length}, string ->
-  left_bound =
-    if x - 3 < 0 do
-      0
-    else
-      x - 3
-    end
-
-  right_bound =
-    if x + length + 3 >= 140 do
-      139
-    else
-      x + length + 3
-    end
-
-  upper_bound =
-    if y - 1 < 0 do
-      0
-    else
-      y - 1
-    end
-
-  lower_bound =
-    if y + 1 >= 140 do
-      139
-    else
-      y + 1
-    end
-
-  slice_length = right_bound - left_bound
-
-  slices = [
-    {xy_to_string_pos.({left_bound, upper_bound}), slice_length},
-    {xy_to_string_pos.({left_bound, y}), slice_length},
-    {xy_to_string_pos.({left_bound, lower_bound}), slice_length}
+kernel1 = fn {x, y} ->
+  [
+    {x - 1, y - 1},
+    {x, y - 1},
+    {x + 1, y - 1},
+    {x - 1, y},
+    {x + 1, y},
+    {x - 1, y + 1},
+    {x, y + 1},
+    {x + 1, y + 1}
   ]
+  |> Enum.filter(is_valid_offset)
+end
 
-  slices
-  |> Enum.map(&String.slice(string, elem(&1, 0), elem(&1, 1)))
-  |> Enum.join("\n")
-  |> IO.puts
+kernel2 = fn {x, y} ->
+  [
+    {x - 1, y - 1},
+    {x, y - 1},
+    {x + 1, y - 1},
+    {x + 2, y - 1},
+    {x - 1, y},
+    {x + 2, y},
+    {x - 1, y + 1},
+    {x, y + 1},
+    {x + 1, y + 1},
+    {x + 2, y + 1}
+  ]
+  |> Enum.filter(is_valid_offset)
+end
+
+kernel3 = fn {x, y} ->
+  [
+    {x - 1, y - 1},
+    {x, y - 1},
+    {x + 1, y - 1},
+    {x + 2, y - 1},
+    {x + 3, y - 1},
+    {x - 1, y},
+    {x + 3, y},
+    {x - 1, y + 1},
+    {x, y + 1},
+    {x + 1, y + 1},
+    {x + 2, y + 1},
+    {x + 3, y + 1}
+  ]
+  |> Enum.filter(is_valid_offset)
+end
+
+get_kernel = fn length ->
+  case length do
+    1 -> kernel1
+    2 -> kernel2
+    3 -> kernel3
+  end
+end
+
+test_pos = fn string, xy, regex ->
+  pos = xy_to_string_pos.(xy)
+
+  result =
+    string
+    |> String.at(pos)
+    |> String.match?(regex)
+
+    if result do
+      xy
+    else
+    result
+  end
+end
+
+search_offsets = fn offsets, string, regex ->
+  offsets
+  |> Enum.map(&test_pos.(string, &1, regex))
+  |> Enum.filter(&(&1 !== false))
+end
+
+has_symbol_around? = fn {x, y, num_length}, string ->
+  num_length
+  |> get_kernel.()
+  |> apply([{x, y}])
+  |> search_offsets.(string, symbols_regex)
+end
+
+match_array_to_map = fn {key, val}, map ->
+  Map.update(map, key, [val], &[val | &1])
 end
 
 {_, contents} = File.read("input.txt")
 
 input = String.replace(contents, "\n", "")
 
-Regex.scan(symbols_regex, input, return: :index)
-|> Enum.map(fn matches ->
-  matches
+match_pos_array = Regex.scan(number_regex, input, return: :index)
+match_num_array = Regex.scan(number_regex, input) |> Enum.map(&hd/1)
+
+match_pos_array
+|> Enum.map(fn el ->
+  el
   |> hd()
   |> string_pos_to_xy.()
-  |> then(&get_surrounding_contents.(&1, input))
-  # |> then(&IO.puts("#{&1}\n"))
-  |> then(&Regex.scan(number_regex, &1))
-  |> Enum.map(&hd/1)
+  |> has_symbol_around?.(input)
 end)
+|> Enum.zip(match_num_array)
+|> Enum.filter(&(Enum.count(elem(&1, 0)) > 0))
+|> Enum.map(&{hd(elem(&1, 0)), elem(&1, 1)})
+|> Enum.reduce(%{}, match_array_to_map)
+|> Map.values()
 |> Enum.filter(&(Enum.count(&1) === 2))
-|> Enum.map(&Enum.product/1)
+|> Enum.map(fn part_numbers ->
+  part_numbers
+  |> Enum.map(&String.to_integer/1)
+  |> Enum.product()
+end)
 |> Enum.sum()
 |> IO.puts()
-
-
-# Regex por linhas
-#....309|...*...|8..511.
-
-# .{4}\d{1,3} \d{1,3}*\d{}
-
-
-# ....309
-# ...*...
-# 8..511.
-# ----------------------
-# Procura os símbolos
-# Criar uma string representando a região em torno do símbolo usando slices concatenados
-# Match em números
-# Filtrar os matches pelos com apenas 2 matches
-# Produto
-# Soma dos produtos
