@@ -50,7 +50,8 @@ get_surrounding_contents = fn {x, y, length}, string ->
 
   slices
   |> Enum.map(&String.slice(string, elem(&1, 0), elem(&1, 1)))
-  |> Enum.join("")
+  |> Enum.join("\n")
+  |> IO.puts
 end
 
 {_, contents} = File.read("input.txt")
@@ -63,6 +64,7 @@ Regex.scan(symbols_regex, input, return: :index)
   |> hd()
   |> string_pos_to_xy.()
   |> then(&get_surrounding_contents.(&1, input))
+  # |> then(&IO.puts("#{&1}\n"))
   |> then(&Regex.scan(number_regex, &1))
   |> Enum.map(&hd/1)
 end)
@@ -71,6 +73,17 @@ end)
 |> Enum.sum()
 |> IO.puts()
 
+
+# Regex por linhas
+#....309|...*...|8..511.
+
+# .{4}\d{1,3} \d{1,3}*\d{}
+
+
+# ....309
+# ...*...
+# 8..511.
+# ----------------------
 # Procura os símbolos
 # Criar uma string representando a região em torno do símbolo usando slices concatenados
 # Match em números
