@@ -1,10 +1,6 @@
 symbols_regex = ~r/\*/
 number_regex = ~r/[1-9][0-9]{0,2}/
 
-is_valid_offset = fn {x, y} ->
-  x >= 0 and y >= 0 and x < 140 and y < 140
-end
-
 string_pos_to_xy = fn {idx, length} ->
   x = rem(idx, 140)
   y = div(idx, 140)
@@ -54,26 +50,30 @@ get_surrounding_contents = fn {x, y, length}, string ->
 
   slices
   |> Enum.map(&String.slice(string, elem(&1, 0), elem(&1, 1)))
-  |> Enum.join("\n")
-  |> then(&IO.puts("#{&1}\n\n"))
+  |> Enum.join("")
 end
 
 {_, contents} = File.read("input.txt")
 
 input = String.replace(contents, "\n", "")
 
-match_pos_array = Regex.scan(symbols_regex, input, return: :index)
-match_num_array = Regex.scan(number_regex, input) |> Enum.map(&hd/1)
-
-match_pos_array
-|> Enum.map(&hd/1)
-|> Enum.map(&string_pos_to_xy.(&1))
-|> Enum.map(&get_surrounding_contents.(&1, input))
+Regex.scan(symbols_regex, input, return: :index)
+|> Enum.map(fn matches ->
+  matches
+  |> hd()
+  |> string_pos_to_xy.()
+  |> then(&get_surrounding_contents.(&1, input))
+  |> then(&Regex.scan(number_regex, &1))
+  |> Enum.map(&hd/1)
+end)
+|> Enum.filter(&(Enum.count(&1) === 2))
+|> Enum.map(&Enum.product/1)
+|> Enum.sum()
+|> IO.puts()
 
 # Procura os símbolos
-# criar uma string representando a região em torno do símbolo usando slices concatenados
-# slice(x-3, y-1), slice do meio, slice()
-# String.match?()
-# pegar só os com dois matches
+# Criar uma string representando a região em torno do símbolo usando slices concatenados
+# Match em números
+# Filtrar os matches pelos com apenas 2 matches
 # Produto
-# soma dos produtos
+# Soma dos produtos
