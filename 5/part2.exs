@@ -22,7 +22,7 @@ defmodule Almanac do
       |> Enum.map(&(key in &1))
       |> Enum.any?()
 
-    Logging.pretty_print(is_special?, "is #{key} special?")
+    # Logging.pretty_print(is_special?, "is #{key} special?")
 
     if is_special? do
       src_range = Enum.find(map_keys, &(key in &1))
@@ -34,14 +34,15 @@ defmodule Almanac do
   end
 
   def get_location(seed, maps) do
-    Logging.pretty_print(seed, "\n\n---\ngetting location for seed")
+    # Logging.pretty_print(seed, "\n\n---\ngetting location for seed")
 
     maps
     |> Enum.reduce(seed, fn current_map, prev_result ->
-      Logging.pretty_print(prev_result, "---\ninput")
-      Logging.pretty_print(current_map, "map")
+      # Logging.pretty_print(prev_result, "---\ninput")
+      # Logging.pretty_print(current_map, "map")
       result = get_val(current_map, prev_result)
-      Logging.pretty_print(result, "result")
+      # Logging.pretty_print(result, "result")
+      result
     end)
   end
 
@@ -63,6 +64,17 @@ defmodule Almanac do
     end)
   end
 
+  def get_all_seeds(input) do
+    pair_to_seed_list = fn [range_start, range_length] ->
+      Range.to_list(range_start..(range_start + (range_length - 1)))
+    end
+
+    input
+    |> Enum.chunk_every(2)
+    |> Enum.map(pair_to_seed_list)
+    |> Enum.concat()
+  end
+
   def parse([
         raw_seeds | raw_maps
         # raw_seed_soil,
@@ -81,6 +93,7 @@ defmodule Almanac do
       |> hd()
       |> String.split(" ")
       |> Enum.map(&String.to_integer/1)
+      |> get_all_seeds()
 
     maps =
       raw_maps
