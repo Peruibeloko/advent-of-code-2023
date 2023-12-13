@@ -81,10 +81,10 @@ calculate_points = fn games ->
 
       next_games = affected_games ++ Enum.drop(remaining_games, Enum.count(affected_games))
 
-      # pretty_print.([winners, bets, copies_of_current_card], "---\ncurrent game")
-      # pretty_print.(games_won, "result of game")
-      # pretty_print.(updated_result, "running total")
-      # pretty_print.(next_games, "remaining games")
+      pretty_print.([winners, bets, copies_of_current_card], "---\ncurrent game")
+      pretty_print.(games_won, "result of game")
+      pretty_print.(updated_result, "running total")
+      pretty_print.(next_games, "remaining games")
 
       rec.(updated_result, next_games, rec)
     end
