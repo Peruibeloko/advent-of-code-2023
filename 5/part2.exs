@@ -9,6 +9,14 @@ defmodule Logging do
       charlists: :as_lists
     )
   end
+
+  def spinner() do
+    IO.puts("|\r")
+    IO.puts("/\r")
+    IO.puts("-\r")
+    IO.puts("\\\r")
+    spinner()
+  end
 end
 
 defmodule Almanac do
@@ -64,27 +72,21 @@ defmodule Almanac do
     end)
   end
 
-  def get_all_seeds(input) do
+  def seed_pair_list_to_range(input) do
     pair_to_seed_list = fn [range_start, range_length] ->
-      Range.to_list(range_start..(range_start + (range_length - 1)))
+      range_start..(range_start + (range_length - 1))
     end
 
     input
     |> Enum.chunk_every(2)
     |> Enum.map(pair_to_seed_list)
-    |> Enum.concat()
   end
 
-  def parse([
-        raw_seeds | raw_maps
-        # raw_seed_soil,
-        # raw_soil_fert,
-        # raw_fert_water,
-        # raw_water_light,
-        # raw_light_temp,
-        # raw_temp_humi,
-        # raw_humi_location
-      ]) do
+  def min_location_of_seed_range(seed_range, maps) do
+    Enum.reduce(seed_range, &min(&2, Almanac.get_location(&1, maps)))
+  end
+
+  def parse([raw_seeds | raw_maps]) do
     seeds =
       raw_seeds
       |> hd()
@@ -93,7 +95,7 @@ defmodule Almanac do
       |> hd()
       |> String.split(" ")
       |> Enum.map(&String.to_integer/1)
-      |> get_all_seeds()
+      |> seed_pair_list_to_range()
 
     maps =
       raw_maps
@@ -109,7 +111,8 @@ contents
 |> Enum.filter(&(&1 !== [""]))
 |> Almanac.parse()
 |> then(fn {seeds, maps} ->
-  Enum.map(seeds, &Almanac.get_location(&1, maps))
+  task_list = Enum.map(seeds, &Task.async(Almanac, :min_location_of_seed_range, [&1, maps]))
+  Enum.map(task_list, &Task.await(&1, :infinity))
 end)
 |> Enum.min()
 |> Logging.pretty_print("\n\n---\nRecommended location")
