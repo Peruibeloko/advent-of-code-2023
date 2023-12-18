@@ -1,4 +1,4 @@
-{_, contents} = File.read("input.txt")
+{_, contents} = File.read("test.txt")
 
 defmodule Logging do
   def pretty_print(data, label \\ "") do
@@ -21,12 +21,12 @@ defmodule Almanac do
 
     map_values
     |> Enum.map(split_spaces_parse_int)
-    |> Enum.reduce(%{}, fn [dest_start, src_start, range_length], map ->
-      Map.put(
-        map,
-        src_start..(src_start + (range_length - 1)),
-        dest_start..(dest_start + (range_length - 1))
-      )
+    |> Enum.reduce([], fn [dest_start, src_start, range_length], map ->
+      %{
+        :input => src_start,
+        :output => dest_start,
+        :range => range_length
+      }
     end)
   end
 
@@ -57,27 +57,6 @@ defmodule Almanac do
 
     {seeds, maps}
   end
-
-  def split_over_ranges(input_start..input_end, input_stage) do
-    slice_indices = input_stage
-    |> Map.keys()
-    |> Enum.reduce([], fn range_start..range_end, slice_indices ->
-      # How to find the index of
-    end)
-  end
-
-  def process_transformations({seeds, stages}) do
-    stage_affects_seed_range? = fn {input, _}, range_start..range_end ->
-      Enum.member?(input, range_start) or Enum.member?(input, range_end)
-    end
-
-    Enum.reduce(stages, seeds, fn current_stage, previous_result ->
-      Enum.map(previous_result, fn range_to_transform ->
-        affecting_stage_ranges = Enum.filter(current_stage, &stage_affects_seed_range?.(&1, range_to_transform))
-        split_input = split_over_ranges(range_to_transform, affecting_stage_ranges)
-      end)
-    end)
-  end
 end
 
 contents
@@ -85,5 +64,4 @@ contents
 |> Enum.chunk_by(&(&1 === ""))
 |> Enum.filter(&(&1 !== [""]))
 |> Almanac.parse()
-|> Almanac.process_transformations()
 |> Logging.pretty_print("\n\n---\nRecommended location")
