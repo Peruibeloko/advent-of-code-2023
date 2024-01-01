@@ -14,10 +14,6 @@ defmodule Solution do
     |> Enum.zip()
   end
 
-  def create_formula(a, b, c) do
-    fn x -> :math.pow(a * x, 2) + b * x + c end
-  end
-
   def bhaskara(a, b, c) do
     delta = b * b - 4 * a * c
 
