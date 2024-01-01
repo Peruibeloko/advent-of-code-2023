@@ -1,7 +1,5 @@
-{_, contents} = File.read("test.txt")
-
 defmodule Solution do
-  def parse_races(file_contets) do
+  def parse_races(file_contents) do
     parse_line = fn line ->
       line
       |> String.split(~r/\:\s+/)
@@ -10,14 +8,14 @@ defmodule Solution do
       |> Enum.map(&String.to_integer/1)
     end
 
-    file_contets
-    |> String.split("\r\n")
+    file_contents
+    |> String.split("\n")
     |> Enum.map(parse_line)
     |> Enum.zip()
   end
 
   def create_formula(a, b, c) do
-    fn x -> :math.pow(x, 2) + b * x + c end
+    fn x -> :math.pow(a * x, 2) + b * x + c end
   end
 
   def bhaskara(a, b, c) do
@@ -30,13 +28,29 @@ defmodule Solution do
 
   def win_count_of_race({t_max, d_record}) do
     {l, r} = Solution.bhaskara(-1, t_max, -d_record)
-    Range.size(round(:math.ceil(l))..round(:math.floor(r)))
+    rounded_l = ceil(l)
+    rounded_r = floor(r)
+
+    cond do
+      l == rounded_l and r == rounded_r ->
+        Range.size((rounded_r - 1)..(rounded_l + 1))
+
+      l != rounded_l and r == rounded_r ->
+        Range.size((rounded_r - 1)..rounded_l)
+
+      l == rounded_l and r != rounded_r ->
+        Range.size(rounded_r..(rounded_l + 1))
+
+      l != rounded_l and r != rounded_r ->
+        Range.size(rounded_r..rounded_l)
+    end
   end
 end
 
-races = Solution.parse_races(contents)
+{_, contents} = File.read("input.txt")
 
-races
+contents
+|> Solution.parse_races()
 |> Enum.map(&Solution.win_count_of_race/1)
 |> Enum.product()
-|> IO.inspect()
+|> dbg()
