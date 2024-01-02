@@ -1,4 +1,21 @@
 defmodule Solution do
+  def pretty_print(data) do
+    IO.inspect(data,
+      pretty: true,
+      syntax_colors: IO.ANSI.syntax_colors(),
+      charlists: :as_lists
+    )
+  end
+
+  def pretty_print(label, data) do
+    IO.inspect(data,
+      label: label,
+      pretty: true,
+      syntax_colors: IO.ANSI.syntax_colors(),
+      charlists: :as_lists
+    )
+  end
+
   def get_hand_score(hand) do
     get_score = fn
       [5] -> 7
@@ -18,31 +35,49 @@ defmodule Solution do
     |> get_score.()
   end
 
-  def compare_hands({_, score_a, _}, {_, score_b, _}) when score_a !== score_b do
-    score_a >= score_b
+  def compare_hands(hand_a, hand_b) do
+    card_pairs = Enum.zip(String.graphemes(hand_a), String.graphemes(hand_b))
+    compare_hands(card_pairs)
   end
 
-  def compare_hands({hand_a, _, _}, {hand_b, _, _}) do
-    card_values = %{
-      "2" => 1,
-      "3" => 2,
-      "4" => 3,
-      "5" => 4,
-      "6" => 5,
-      "7" => 6,
-      "8" => 7,
-      "9" => 8,
-      "T" => 9,
-      "J" => 10,
-      "Q" => 11,
+  def compare_hands([{card_a, card_b} | remaining_pairs]) do
+    card_strength = %{
+      "A" => 13,
       "K" => 12,
-      "A" => 13
+      "Q" => 11,
+      "J" => 10,
+      "T" => 9,
+      "9" => 8,
+      "8" => 7,
+      "7" => 6,
+      "6" => 5,
+      "5" => 4,
+      "4" => 3,
+      "3" => 2,
+      "2" => 1
     }
 
-    Enum.zip(String.graphemes(hand_a), String.graphemes(hand_b))
-    |> Enum.any?(fn
-      {a, b} -> card_values[a] > card_values[b]
-    end)
+    strength_a = card_strength[card_a]
+    strength_b = card_strength[card_b]
+
+    cond do
+      strength_a === strength_b ->
+        compare_hands(remaining_pairs)
+
+      strength_a < strength_b ->
+        true
+
+      true ->
+        false
+    end
+  end
+
+  def sort_games({hand_a, score_a, _}, {hand_b, score_b, _}) do
+    if score_a !== score_b do
+      score_a <= score_b
+    else
+      compare_hands(hand_a, hand_b)
+    end
   end
 
   def parse_file(file_contents) do
@@ -55,11 +90,24 @@ defmodule Solution do
     file_contents
     |> String.split("\n")
     |> Enum.map(parse_line)
-    |> Enum.sort(&compare_hands/2)
+    |> Enum.sort(&sort_games/2)
+  end
+
+  def total_winnings([{_, _, bid} | remaining_games]) do
+    total_winnings(remaining_games, 2, bid)
+  end
+
+  def total_winnings([{_, _, bid} | remaining_games], current_rank, running_total) do
+    total_winnings(remaining_games, current_rank + 1, bid * current_rank + running_total)
+  end
+
+  def total_winnings([], _, running_total) do
+    running_total
   end
 end
 
-{_, contents} = File.read("test.txt")
+{_, contents} = File.read("input.txt")
 
 Solution.parse_file(contents)
+|> Solution.total_winnings()
 |> IO.inspect()
