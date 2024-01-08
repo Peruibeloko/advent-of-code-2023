@@ -10,6 +10,11 @@ defmodule Graph do
   def go(:R, node, graph) do
     Map.get(graph, node)."R"
   end
+
+  def filter(graph, regex) do
+    graph
+    |> Enum.filter(&(Regex.run(regex, elem(&1, 0)) !== nil))
+  end
 end
 
 defmodule Solution do
@@ -41,21 +46,24 @@ defmodule Solution do
     {origin, {left, right}}
   end
 
-  def walk(graph, [current_step | remaining_steps], node, step_count, original_steps) do
-    # pretty_print("Walking", {current_step, node, step_count})
-    result = Graph.go(current_step, node, graph)
-    walk(graph, remaining_steps, result, step_count + 1, original_steps)
+  def walk(graph, [current_step | remaining_steps], node, step_count, original_steps, target) do
+    pretty_print({target, node})
+    if Regex.match?(target, node) do
+      step_count
+    else
+      result = Graph.go(current_step, node, graph)
+      walk(graph, remaining_steps, result, step_count + 1, original_steps, target)
+    end
   end
 
-  def walk(_, _, "ZZZ", step_count, _) do
-    step_count
-  end
-
-  def walk(graph, [], node, step_count, original_steps) do
-    [current_step | remaining_steps] = original_steps
-    # pretty_print("Restart steps", {current_step, node, step_count})
-    result = Graph.go(current_step, node, graph)
-    walk(graph, remaining_steps, result, step_count + 1, original_steps)
+  def walk(graph, [], node, step_count, original_steps, target) do
+    if Regex.match?(target, node) do
+      step_count
+    else
+      [current_step | remaining_steps] = original_steps
+      result = Graph.go(current_step, node, graph)
+      walk(graph, remaining_steps, result, step_count + 1, original_steps, target)
+    end
   end
 end
 
@@ -63,7 +71,7 @@ end
 
 [raw_directions, _ | raw_node_list] =
   contents
-  |> String.split("\r\n")
+  |> String.split("\n")
 
 directions =
   raw_directions
@@ -77,8 +85,21 @@ graph =
     graph -> Graph.add(graph, node, left, right)
   end
 
-Solution.pretty_print("Walk input", {directions, graph})
+starting_nodes = Graph.filter(graph, ~r/[A-Z]{2}A/)
+ending_nodes = Graph.filter(graph, ~r/[A-Z]{2}Z/)
 
-steps = Solution.walk(graph, directions, "AAA", 0, directions)
+Solution.pretty_print(starting_nodes)
+Solution.pretty_print(ending_nodes)
 
-Solution.pretty_print("Reached ZZZ in", steps)
+steps_to_z =
+  for {node, _} <- ending_nodes do
+    Solution.walk(graph, directions, node, 0, directions, ~r/[A-Z]{2}A/)
+  end
+
+# steps_to_a =
+#   for {node, _} <- ending_nodes do
+#     Solution.walk(graph, directions, node, 0, directions, ~r/[A-Z]{2}A/)
+#   end
+
+Solution.pretty_print(steps_to_z)
+# Solution.pretty_print(steps_to_a)
