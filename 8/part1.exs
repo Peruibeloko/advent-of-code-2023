@@ -1,38 +1,3 @@
-defmodule Digraph do
-  def go(direction, vertex, graph) do
-    parse_edges = fn [e1, e2] ->
-      {_, _, _, direction} = :digraph.edge(graph, e1)
-
-      if direction === "left" do
-        {:digraph.edge(graph, e1), :digraph.edge(graph, e2)}
-      else
-        {:digraph.edge(graph, e2), :digraph.edge(graph, e1)}
-      end
-    end
-
-    {left, right} =
-      graph
-      |> :digraph.out_edges(vertex)
-      |> parse_edges.()
-
-    if direction === :L, do: left, else: right
-  end
-
-  def build_graph(nodes) do
-    graph = :digraph.new()
-
-    for {label, {left, right}} <- nodes do
-      :digraph.add_vertex(graph, label)
-      :digraph.add_vertex(graph, left)
-      :digraph.add_vertex(graph, right)
-      :digraph.add_edge(graph, label, left, "left")
-      :digraph.add_edge(graph, label, right, "right")
-    end
-
-    graph
-  end
-end
-
 defmodule Graph do
   def add(graph, node, left, right) do
     Map.put_new(graph, node, %{L: left, R: right})
