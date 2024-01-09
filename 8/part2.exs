@@ -119,50 +119,46 @@ defmodule Solution do
     lcm({numbers, numbers}, primes, [])
   end
 
-  def lcm({iteration, original_numbers}, [final_prime | []], factors) do
-    is_divisible = fn val ->
-      if rem(val, final_prime) === 0, do: :divisible, else: :indivisible
-    end
-
-    %{:divisible => divisibles, :indivisible => indivisibles} =
-      iteration |> Enum.group_by(is_divisible)
-
-    if divisibles !== [] do
-      division_results = divisibles |> Enum.map(&div(&1, final_prime))
-
-      lcm({[division_results | indivisibles], original_numbers}, [final_prime], [
-        final_prime | factors
-      ])
-    else
-      Enum.product(factors)
-    end
-  end
-
   def lcm({iteration, original_numbers}, [current_prime | remaining_primes], factors) do
-    is_divisible = fn val ->
-      if rem(val, current_prime) === 0, do: :divisible, else: :indivisible
+    is_divisible = fn
+      val, div when rem(val, div) === 0 -> "divisible"
+      _, _ -> "indivisible"
     end
 
-    %{:divisible => divisibles, :indivisible => indivisibles} =
-      iteration |> Enum.group_by(is_divisible)
+    to_array = fn
+      nil -> []
+      val -> val
+    end
 
-    if divisibles !== [] do
-      division_results = divisibles |> Enum.map(&div(&1, current_prime))
+    grouped_numbers =
+      iteration
+      |> Enum.group_by(&is_divisible.(&1, current_prime))
 
-      lcm(
-        {[division_results | indivisibles], original_numbers},
-        [current_prime | remaining_primes],
-        [
-          current_prime | factors
-        ]
-      )
-    else
-      lcm({original_numbers, original_numbers}, remaining_primes, factors)
+    divisibles = to_array.(grouped_numbers["divisible"])
+    indivisibles = to_array.(grouped_numbers["indivisible"])
+
+    cond do
+      divisibles !== [] ->
+        division_results = divisibles |> Enum.map(&div(&1, current_prime))
+
+        lcm(
+          {division_results ++ indivisibles, original_numbers},
+          [current_prime | remaining_primes],
+          [
+            current_prime | factors
+          ]
+        )
+
+      remaining_primes === [] ->
+        Enum.product(factors)
+
+      true ->
+        lcm({original_numbers, original_numbers}, remaining_primes, factors)
     end
   end
 end
 
-{_, contents} = File.read("test2.txt")
+{_, contents} = File.read("input.txt")
 
 [raw_directions, _ | raw_node_list] =
   contents
