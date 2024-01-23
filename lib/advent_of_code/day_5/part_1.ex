@@ -8,7 +8,7 @@ defmodule AdventOfCode.Day5.Part1 do
       |> Enum.map(&(key in &1))
       |> Enum.any?()
 
-    Utils.pretty_print(is_special?, "is #{key} special?")
+    Utils.pretty_print("is #{key} special?", is_special?)
 
     if is_special? do
       src_range =
@@ -24,16 +24,16 @@ defmodule AdventOfCode.Day5.Part1 do
   end
 
   def get_location(seed, maps) do
-    Utils.pretty_print(seed, "\n\n---\ngetting location for seed")
+    Utils.pretty_print("\n\n---\ngetting location for seed", seed)
 
     maps
     |> Enum.reduce(seed, fn current_map, prev_result ->
-      Utils.pretty_print(prev_result, "---\ninput")
-      Utils.pretty_print(current_map, "map")
+      Utils.pretty_print("---\ninput", prev_result)
+      Utils.pretty_print("map", current_map)
 
       result = get_val(current_map, prev_result)
 
-      Utils.pretty_print(result, "result")
+      Utils.pretty_print("result", result)
     end)
   end
 
@@ -55,9 +55,12 @@ defmodule AdventOfCode.Day5.Part1 do
     end)
   end
 
-  def line_parser(line) do
-    [raw_seeds | raw_maps] =
-      line
+  def parse_file(file_name) do
+    {_, content} = File.read(file_name)
+
+    [[raw_seeds] | raw_maps] =
+      content
+      |> String.split(["\n", "\r\n"])
       |> Enum.chunk_by(&(&1 === ""))
       |> Enum.filter(&(&1 !== [""]))
 
@@ -65,20 +68,27 @@ defmodule AdventOfCode.Day5.Part1 do
       raw_maps
       |> Enum.map(&parse_raw_map/1)
 
-    raw_seeds
-    |> hd()
-    |> String.split(": ")
-    |> tl()
-    |> hd()
-    |> String.split(" ")
-    |> Enum.map(&String.to_integer/1)
-    |> Enum.map(&Almanac.get_location(&1, maps))
+    [_ | [seeds_input]] = String.split(raw_seeds, ": ")
+
+    seeds =
+      seeds_input
+      |> String.split(" ")
+      |> Enum.map(&String.to_integer/1)
+
+    {seeds, maps}
   end
 
   def run(file_name) do
-    file_name
-    |> Utils.parse_file(&line_parser/1)
-    |> Enum.min()
-    |> Utils.pretty_print("\n\n---\nRecommended location")
+    {seeds, maps} = parse_file(file_name)
+
+    locations =
+      for seed <- seeds do
+        get_location(seed, maps)
+      end
+
+    closest_location =
+      Enum.min(locations)
+
+    Utils.pretty_print("\n\n---\nRecommended location", closest_location)
   end
 end

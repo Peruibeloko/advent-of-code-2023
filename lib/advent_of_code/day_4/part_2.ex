@@ -21,7 +21,7 @@ defmodule AdventOfCode.Day4.Part2 do
 
     games_won =
       winners
-      |> Enum.filter(&binary_search.(&1, bets))
+      |> Enum.filter(&binary_search?(&1, bets))
       |> Enum.count()
 
     affected_games =
@@ -31,10 +31,10 @@ defmodule AdventOfCode.Day4.Part2 do
 
     next_games = affected_games ++ Enum.drop(remaining_games, Enum.count(affected_games))
 
-    Utils.pretty_print([winners, bets, copies_of_current_card], "---\ncurrent game")
-    Utils.pretty_print(games_won, "result of game")
-    Utils.pretty_print(updated_result, "running total")
-    Utils.pretty_print(next_games, "remaining games")
+    Utils.pretty_print("---\ncurrent game", [winners, bets, copies_of_current_card])
+    Utils.pretty_print("result of game", games_won)
+    Utils.pretty_print("running total", updated_result)
+    Utils.pretty_print("remaining games", next_games)
 
     calculate_points(next_games, updated_result)
   end
@@ -89,11 +89,10 @@ defmodule AdventOfCode.Day4.Part2 do
   end
 
   def run(file_name) do
-    games =
-      file_name
-      |> Utils.parse_file(&line_parser/1)
-      |> calculate_points()
-      |> Utils.pretty_print("---\nTotal card count")
+    file_name
+    |> Utils.parse_file(&line_parser/1)
+    |> calculate_points()
+    |> then(&Utils.pretty_print("---\nTotal card count", &1))
   end
 end
 

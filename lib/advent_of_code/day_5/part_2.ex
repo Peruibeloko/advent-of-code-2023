@@ -56,14 +56,14 @@ defmodule AdventOfCode.Day5.Part2 do
   end
 
   def process_stage({[current_input | remaining_inputs], stage}, result) do
-    Logging.pretty_print(
+    Utils.pretty_print(
+      "\n",
       %{
         "current_input" => current_input,
         "remaining_inputs" => remaining_inputs,
         "stage" => stage,
         "result" => result
-      },
-      "\n"
+      }
     )
 
     {as_is, translated, next_up} =
@@ -120,33 +120,40 @@ defmodule AdventOfCode.Day5.Part2 do
     |> Enum.sort_by(& &1[:input].first, :asc)
   end
 
-  def line_parser(line) do
-    [raw_seeds | raw_maps] =
-      line
+  def parse_file(file_name) do
+    {_, content} = File.read(file_name)
+
+    [[raw_seeds] | raw_maps] =
+      content
+      |> String.split(["\n", "\r\n"])
       |> Enum.chunk_by(&(&1 === ""))
       |> Enum.filter(&(&1 !== [""]))
 
+    maps =
+      raw_maps
+      |> Enum.map(&parse_raw_map/1)
+
+    [_ | [seeds_input]] = String.split(raw_seeds, ": ")
+
     seeds =
-      raw_seeds
-      |> hd()
-      |> String.split(": ")
-      |> tl()
-      |> hd()
+      seeds_input
       |> String.split(" ")
       |> Enum.map(&String.to_integer/1)
       |> seed_pair_to_range()
       |> Enum.sort_by(& &1.first, :asc)
 
-    raw_maps
-    |> Enum.map(&parse_raw_map/1)
-    |> Enum.reduce(seeds, &process_stage({&2, &1}, []))
-    |> Enum.map(& &1.first)
+    {seeds, maps}
   end
 
   def run(file_name) do
-    file_name
-    |> Utils.parse_file(&line_parser/1)
-    |> Enum.min()
-    |> Logging.pretty_print("\n\nRecommended location")
+    {seeds, maps} = parse_file(file_name)
+
+    closest_location =
+      maps
+      |> Enum.reduce(seeds, &process_stage({&2, &1}, []))
+      |> Enum.map(& &1.first)
+      |> Enum.min()
+
+    Utils.pretty_print("\n\nRecommended location", closest_location)
   end
 end

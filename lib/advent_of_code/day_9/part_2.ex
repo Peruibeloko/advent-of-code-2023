@@ -45,6 +45,8 @@ defmodule AdventOfCode.Day9.Part2 do
 
   def line_parser(line) do
     line
+    |> String.split()
+    |> Enum.map(&String.to_integer/1)
     |> Enum.reverse()
     |> create_regressions([])
     |> Enum.map(&Enum.reverse/1)
