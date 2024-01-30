@@ -90,7 +90,7 @@ defmodule AdventOfCode.Day4.Part2 do
 
   def run(file_name) do
     file_name
-    |> Utils.parse_file(&line_parser/1)
+    |> Utils.parse_lines(&line_parser/1)
     |> calculate_points()
     |> then(&Utils.pretty_print("---\nTotal card count", &1))
   end

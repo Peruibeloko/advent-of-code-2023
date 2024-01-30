@@ -16,11 +16,24 @@ defmodule AdventOfCode.Utils do
     )
   end
 
-  def parse_file(file_path, line_parser) do
+  def read_file(file_path) do
     {_, contents} = File.read(file_path)
-
     contents
-    |> String.split(["\n", "\r\n"])
+  end
+
+  def split_lines(string) do
+    String.split(string, ["\n", "\r\n"])
+  end
+
+  def get_lines(file_path) do
+    file_path
+    |> read_file()
+    |> split_lines()
+  end
+
+  def parse_lines(file_path, line_parser) do
+    file_path
+    |> get_lines()
     |> Enum.map(line_parser)
   end
 end

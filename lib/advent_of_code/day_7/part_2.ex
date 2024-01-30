@@ -106,7 +106,7 @@ defmodule AdventOfCode.Day7.Part2 do
 
   def run(file_name) do
     file_name
-    |> Utils.parse_file(&line_parser/1)
+    |> Utils.parse_lines(&line_parser/1)
     |> Enum.sort(&sort_games/2)
     |> total_winnings()
     |> IO.inspect()

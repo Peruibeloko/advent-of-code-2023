@@ -75,7 +75,7 @@ defmodule AdventOfCode.Day4.Part1 do
   def run(file_name) do
     games =
       file_name
-      |> Utils.parse_file(&line_parser/1)
+      |> Utils.parse_lines(&line_parser/1)
 
     print_input(games)
 

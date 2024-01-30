@@ -39,7 +39,7 @@ defmodule AdventOfCode.Day6.Part1 do
 
   def run(file_name) do
     file_name
-    |> Utils.parse_file(&line_parser/1)
+    |> Utils.parse_lines(&line_parser/1)
     |> Enum.zip()
     |> Enum.map(&win_count_of_race/1)
     |> Enum.product()

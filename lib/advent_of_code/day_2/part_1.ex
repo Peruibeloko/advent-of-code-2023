@@ -42,7 +42,7 @@ defmodule AdventOfCode.Day2.Part1 do
 
   def run(file_name) do
     file_name
-    |> Utils.parse_file(&line_parser/1)
+    |> Utils.parse_lines(&line_parser/1)
     |> Enum.filter(&is_compatible?(&1, @reference))
     |> Enum.map(&elem(&1, 0))
     |> Enum.sum()

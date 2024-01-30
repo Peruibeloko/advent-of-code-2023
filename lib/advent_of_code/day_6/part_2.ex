@@ -40,7 +40,7 @@ defmodule AdventOfCode.Day6.Part2 do
 
   def run(file_name) do
     file_name
-    |> Utils.parse_file(&line_parser/1)
+    |> Utils.parse_lines(&line_parser/1)
     |> win_count_of_race()
     |> dbg()
   end
