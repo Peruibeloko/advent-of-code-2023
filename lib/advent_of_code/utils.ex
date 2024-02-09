@@ -36,4 +36,12 @@ defmodule AdventOfCode.Utils do
     |> get_lines()
     |> Enum.map(line_parser)
   end
+
+  def replace_keep_size(input, pattern, replacement) do
+    input
+    |> String.replace(pattern, fn match ->
+      size = String.length(match)
+      String.duplicate(replacement, size)
+    end)
+  end
 end

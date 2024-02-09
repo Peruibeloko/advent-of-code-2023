@@ -1,7 +1,9 @@
 alias AdventOfCode.Utils
 
 defmodule AdventOfCode.Day10.Part2 do
-  defp sanitize(input, pattern) do
+  @verbose false
+
+  def sanitize(input, pattern) do
     case Regex.run(pattern, input) do
       nil ->
         input
@@ -12,7 +14,7 @@ defmodule AdventOfCode.Day10.Part2 do
     end
   end
 
-  defp join_vertical(lines) do
+  def join_vertical(lines) do
     for pos <- 0..(Enum.count(lines) - 1), reduce: [] do
       output ->
         Enum.concat(
@@ -27,6 +29,12 @@ defmodule AdventOfCode.Day10.Part2 do
     |> Enum.join("\n")
   end
 
+  def flip(input) do
+    input
+    |> Utils.split_lines()
+    |> join_vertical()
+  end
+
   @invalid_horizontal ~r/^[J7]|(?<=[ J7|])[-J7]|[LF-](?=[|FL ])|[FL]$/m
   @invalid_vertical ~r/^[J|L]|(?<=[ JL-])[J|L]|[7|F](?=[-7F ])|[7|F]$/m
 
@@ -36,8 +44,7 @@ defmodule AdventOfCode.Day10.Part2 do
     else
       input
     end
-    |> Utils.split_lines()
-    |> join_vertical()
+    |> flip()
     |> cleanup(next_pattern)
   end
 
@@ -57,9 +64,7 @@ defmodule AdventOfCode.Day10.Part2 do
     if should_run? do
       cleanup_logic(input, should_run?, @invalid_vertical, @invalid_horizontal)
     else
-      input
-      |> Utils.split_lines()
-      |> join_vertical()
+      flip(input)
     end
   end
 
@@ -67,7 +72,8 @@ defmodule AdventOfCode.Day10.Part2 do
     str_start = String.slice(string, 0..(range.first - 1))
     str_end = String.slice(string, (range.last + 1)..-1//1)
     spacing = String.duplicate(replacement, Range.size(range))
-    Utils.pretty_print("Replacing", {String.slice(string, range), spacing})
+
+    if(@verbose, do: Utils.pretty_print("Replacing", {String.slice(string, range), spacing}))
 
     "#{str_start}#{spacing}#{str_end}"
   end
@@ -88,9 +94,11 @@ defmodule AdventOfCode.Day10.Part2 do
         square = String.slice(output, upper_range) <> String.slice(output, lower_range)
 
         if square === "F7LJ" do
-          Utils.pretty_print("pos", pos)
-          Utils.pretty_print("Ranges", [upper_range, lower_range])
-          Utils.pretty_print("Square", square)
+          if @verbose do
+            Utils.pretty_print("pos", pos)
+            Utils.pretty_print("Ranges", [upper_range, lower_range])
+            Utils.pretty_print("Square", square)
+          end
 
           output
           |> replace_at(upper_range, " ")
@@ -101,6 +109,43 @@ defmodule AdventOfCode.Day10.Part2 do
     end
   end
 
+  def trim_outer_dots(input) do
+    outer_dots_pattern = ~r/ \K\.+|\.+(?= )/
+
+    if(input =~ outer_dots_pattern) do
+      input
+      |> flip()
+      |> Utils.replace_keep_size(outer_dots_pattern, " ")
+      |> flip()
+      |> Utils.replace_keep_size(outer_dots_pattern, " ")
+      |> flip()
+      |> trim_outer_dots()
+    else
+      input
+    end
+  end
+
+  def count_inside_points(input) do
+    for line <- Utils.split_lines(input), line =~ ~r/\.+/ do
+      scan_result =
+        ~r/\./
+        |> Regex.scan(line, return: :index)
+        |> Enum.map(&hd/1)
+
+      for {pos, _} <- scan_result do
+        line
+        |> String.slice((pos + 1)..140)
+        |> String.replace([".", " "], "")
+        |> String.replace(~r/F-*J|L-*7/, "|")
+        |> String.replace(~r/F-*7|L-*J/, "||")
+        |> String.length()
+        |> then(&(rem(&1, 2) !== 0))
+      end
+      |> Enum.count(&(&1 === true))
+    end
+    |> Enum.sum()
+  end
+
   def run(file_name) do
     contents =
       file_name
@@ -108,15 +153,12 @@ defmodule AdventOfCode.Day10.Part2 do
       |> String.replace(~r/\./, " ")
       |> cleanup(@invalid_horizontal)
       |> remove_squares()
-
-    # TODO
-    # ? Usar a regex (?<=\S) +(?=\S) para encontrar regiões de espaço em branco rodeadas
-    # ? Usar os índices para testar por conectividade
-    # ? Se dois alcances estão adjacentes em Y e seus alcances se interseccionam, eles estão conectados
-    # ? Segmentar todas as regiões dessa maneira
-    # ? Calcular os tamanhos
-    # ? Pegar o maior
-    # ? Talvez dê pra usar a rotação pra não usar regiões que estejam fora do loop
+      |> Utils.replace_keep_size(~r/(?<=\S) +?(?=\S)/, ".")
+      |> flip()
+      |> Utils.replace_keep_size(~r/^ *\K\.+|\.+(?= *$)/m, " ")
+      |> trim_outer_dots()
+      |> count_inside_points()
+      |> Utils.pretty_print()
 
     file_name
     |> Path.split()
