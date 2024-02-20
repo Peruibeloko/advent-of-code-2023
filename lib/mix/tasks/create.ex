@@ -57,7 +57,7 @@ defmodule Mix.Tasks.Create do
 
     IO.puts("Creating solution files...")
 
-    template_path = Path.expand("lib/mix/tasks/template.txt")
+    template_path = Path.expand("lib/mix/tasks/template")
     {_, contents} = File.read(template_path)
 
     day_1_contents =

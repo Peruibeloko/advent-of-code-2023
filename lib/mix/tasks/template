@@ -1,0 +1,12 @@
+alias AdventOfCode.Utils
+
+defmodule AdventOfCode.Day$day_number$.Part$part_number$ do
+  def line_parser(line) do
+    line
+  end
+
+  def run(file_name) do
+    file_name
+    |> Utils.parse_file(&line_parser/1)
+  end
+end
