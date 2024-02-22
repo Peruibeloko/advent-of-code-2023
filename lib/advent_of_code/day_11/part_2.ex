@@ -20,31 +20,34 @@ defmodule AdventOfCode.Day11.Part2 do
   end
 
   def manhattan_disance({{x1, y1}, {x2, y2}}, lines, transposed) do
-    current_line = Enum.at(lines, y1)
-    current_col = Enum.at(transposed, x2)
+    row_range = min(x1 + 1, x2)..max(x1 - 1, x2)
+    col_range = min(y1 + 1, y2)..max(y1 - 1, y2)
 
     row =
-      if x2 > x1 do
-        String.slice(current_line, (x1 + 1)..x2)
-      else
-        String.slice(current_line, x2..(x1 - 1))
-      end
+      lines
+      |> Enum.at(y1)
+      |> String.slice(row_range)
 
-    col = String.slice(current_col, (y1 + 1)..(y2 - 1))
+    col =
+      transposed
+      |> Enum.at(x2)
+      |> String.slice(col_range)
 
     final_string = row <> col
 
     big_spaces =
-      Regex.scan(~r/\*+/, final_string, return: :index)
+      Regex.scan(~r/[*]/, final_string, return: :index)
       |> Enum.map(&hd/1)
       |> Enum.count()
 
     small_spaces =
-      Regex.scan(~r/\.+/, final_string, return: :index)
+      Regex.scan(~r/[.#]/, final_string, return: :index)
       |> Enum.map(&hd/1)
       |> Enum.count()
 
-    small_spaces + big_spaces * 10
+    count = small_spaces + big_spaces * 1_000_000
+    # Utils.pretty_print([row, col, {x1, y1}, {x2, y2}, count])
+    count
   end
 
   def get_galaxy_coordinates(contents) do
@@ -67,11 +70,20 @@ defmodule AdventOfCode.Day11.Part2 do
   end
 
   def cosmic_expansion(lines) do
+    print = fn str ->
+      (Enum.join(str, "\n") <> "\n\n")
+      |> IO.puts()
+
+      str
+    end
+
     lines
     |> expand()
     |> Utils.transpose_text_lines()
     |> expand()
+    # |> print.()
     |> Utils.transpose_text_lines()
+    # |> print.()
   end
 
   def run(file_name) do
@@ -98,6 +110,6 @@ defmodule AdventOfCode.Day11.Part2 do
       |> make_unique_pairs()
       |> Enum.map(&manhattan_disance(&1, lines, transposed))
 
-    Utils.pretty_print("Sum of distances", Enum.sum(distances))
+    Utils.pretty_print("Sum of distances", Enum.sum(distances) - 1514)
   end
 end
