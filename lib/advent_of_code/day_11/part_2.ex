@@ -54,7 +54,7 @@ defmodule AdventOfCode.Day11.Part2 do
       |> Enum.map(&hd/1)
       |> Enum.count()
 
-    count = small_spaces + big_spaces * 100
+    count = small_spaces + big_spaces * 1_000_000
     # Utils.pretty_print([row, col, {x1, y1}, {x2, y2}, count])
     count
   end
