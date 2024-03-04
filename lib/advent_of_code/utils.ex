@@ -54,6 +54,22 @@ defmodule AdventOfCode.Utils do
     end)
   end
 
+  def replace_at(input, index, replacement) do
+    before_range =
+      if(index === 0) do
+        -1..0
+      else
+        0..(index - 1)
+      end
+
+    after_range = (index + 1)..(String.length(input) - 1)
+
+    prefix = String.slice(input, before_range)
+    postfix = String.slice(input, after_range)
+
+    "#{prefix}#{replacement}#{postfix}"
+  end
+
   def to_xy(offset, size) do
     x = rem(offset, size)
     y = div(offset, size)
